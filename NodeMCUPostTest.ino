@@ -37,7 +37,7 @@ int butToggle;
 int lastButtonState;    
 int currentButtonState; 
 int counter; // counter is implemented so that button and potentiometer wil be read often, without sending too many HTTP posts
-float potValue;
+int potValue;
 
   void setup() {
   Serial.begin(9600); // set 11250 for Heltec WiFi Kit 8;
@@ -74,7 +74,7 @@ float potValue;
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
     float rawPot = analogRead(0);
-    potValue = (rawPot/1024)*100;
+    potValue = round((rawPot/1024)*100);
     
     //button toggle code
     lastButtonState    = currentButtonState;     
