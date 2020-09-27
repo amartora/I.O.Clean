@@ -12,6 +12,11 @@
   copies or substantial portions of the Software.
 */
 
+//autorefresh every 5 seconds
+$url=$_SERVER["REQUEST_URI"];
+header("Refresh: 5; URL=$url");
+
+	
 $servername = "localhost";
 
 // REPLACE with your Database name
