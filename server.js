@@ -1,9 +1,9 @@
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    host: '100.8.221.42',
+    host: ' ',
     port: '3306',
-    user: 'cleanadmin',
-    password: 'cleanpassword',
+    user: ' ',
+    password: ' ',
     database: 'IoT',
     insecureAuth: true
 });
