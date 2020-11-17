@@ -17,7 +17,7 @@ RTClib RTC;
 
 const char* ssid = "";
 const char* password = "";
-const char* server = "http://100.8.221.42/postfridge.php"; // change to whatever it will be called
+const char* server = ""; // change to whatever it will be called
 String api = "";
 
 int button = 0;
@@ -25,6 +25,7 @@ int DHTpower = 13;//D7
 uint32_t pressedTime;
 uint32_t lastAwake;
 int sleepTime = 30;//in seconds
+uint32_t counter;
 
 
 void writeLongIntoEEPROM(int address, long number)//since EEPROm can only have 1 byte (8 bits) stored at each address, custom functions like these are needed
@@ -95,6 +96,8 @@ void setup() {
     
     float temperature = dht.readTemperature(true);
     float humidity = dht.readHumidity();
+
+    counter = now.unixtime() - pressedTime;
         
     Serial.print("Temperature: ");
     Serial.print(temperature);
@@ -109,12 +112,12 @@ void setup() {
     Serial.print("Now: ");
     Serial.println(now.unixtime());
     Serial.print("Time since: ");
-    Serial.println(now.unixtime() - pressedTime);
+    Serial.println(counter);
     Serial.print("Last awake: ");
     Serial.println(lastAwake);
     
 
-    String httpRequestData = "api_key=" + api + "&temp=" + temperature + "&humid=" + humidity + "&days" + daysSince;
+    String httpRequestData = "api_key=" + api + "&temp=" + temperature + "&humid=" + humidity + "&counter" + counter;
 
     Serial.print("httpRequestData: ");
     Serial.println(httpRequestData);
