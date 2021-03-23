@@ -1,1 +1,10 @@
-tbd
+Hello,
+
+As of 3/23/21, app fully works.
+
+To upload it to github I had to remove node_modules. Thus to run it in VS Code you must run "npm install" to install node_modules.
+Will NOT run otherwise.
+
+Still not working? 
+Click: https://stackoverflow.com/questions/44472878/npm-install-clear-the-react-native-in-node-modules
+Answer #14 is how you refresh the package.json file which may give you an error when it mismatches my uploaded package.json
