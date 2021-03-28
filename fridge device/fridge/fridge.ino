@@ -15,10 +15,10 @@ RTClib RTC;
 
 //note: D0 is connected to the RST pin in order for the baord to be able to wake itself up after sleep. The external wakeup button is a push button connecting D0 to ground.
 
-const char* ssid = "";
-const char* password = "";
-const char* server = ""; // change to whatever it will be called
-String api = "";
+const char* ssid = " ";
+const char* password = " ";
+const char* server = "http://ioclean.xyz/fridgetoSQL.php"; // change to whatever it will be called
+String api = " ";
 
 int button = 0;
 int DHTpower = 13;//D7
@@ -62,7 +62,7 @@ void setup() {
   now = RTC.now();
   Serial.print("Asleep for: ");
   Serial.println(now.unixtime()-lastAwake);
-  if ((now.unixtime()-lastAwake) < (sleepTime-1)){
+  if ((now.unixtime()-lastAwake) < (sleepTime-2)){
    button = 1;
   }
 
@@ -117,7 +117,7 @@ void setup() {
     Serial.println(lastAwake);
     
 
-    String httpRequestData = "api_key=" + api + "&temp=" + temperature + "&humid=" + humidity + "&counter" + counter;
+    String httpRequestData = "api_key=" + api + "&temp=" + temperature + "&humid=" + humidity + "&counter=" + counter;
 
     Serial.print("httpRequestData: ");
     Serial.println(httpRequestData);
