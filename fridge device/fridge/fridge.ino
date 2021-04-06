@@ -2,23 +2,22 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <Wire.h>
-#include "DHT.h"
+#include "dht.h" //this is now using the DHTstable library: https://github.com/RobTillaart/DHTstable
 #include "DS3231.h"
 #include <EEPROM.h>
 
 #define DHTPIN 2//this is pin D4 on the NodeMCU
-#define DHTTYPE DHT22
 
-DHT dht(DHTPIN, DHTTYPE);
+dht dht;
 
 RTClib RTC;
 
 //note: D0 is connected to the RST pin in order for the baord to be able to wake itself up after sleep. The external wakeup button is a push button connecting D0 to ground.
 
-const char* ssid = " ";
-const char* password = " ";
+const char* ssid = "";
+const char* password = "";
 const char* server = "http://ioclean.xyz/fridgetoSQL.php"; // change to whatever it will be called
-String api = " ";
+String api = "";
 
 int button = 0;
 int DHTpower = 13;//D7
@@ -26,9 +25,11 @@ uint32_t pressedTime;
 uint32_t lastAwake;
 int sleepTime = 30;//in seconds
 uint32_t counter;
+float temperature = -1;
+float humidity = -1;
 
 
-void writeLongIntoEEPROM(int address, long number)//since EEPROm can only have 1 byte (8 bits) stored at each address, custom functions like these are needed
+void writeLongIntoEEPROM(int address, long number)//since EEPROM can only have 1 byte (8 bits) stored at each address, custom functions like these are needed
 { 
   EEPROM.write(address, (number >> 24) & 0xFF);
   EEPROM.write(address + 1, (number >> 16) & 0xFF);
@@ -49,7 +50,6 @@ void setup() {
   
   Wire.begin();
   Serial.begin(74880);//74880 seems to work best for this board
-  dht.begin();
   EEPROM.begin(512);
   
   pinMode(DHTpower, OUTPUT);
@@ -93,9 +93,14 @@ void setup() {
     digitalWrite (DHTpower, HIGH);//powering on DHT22, for some reason DHT22 wouldn't read if it is powered from boot-up, so here it gets powered after a bit
     
     delay(1000);
-    
-    float temperature = dht.readTemperature(true);
-    float humidity = dht.readHumidity();
+
+   while(temperature <= 0 || humidity <= 0){
+      dht.read22(DHTPIN);
+      temperature = ((dht.getTemperature() * 1.8) + 32);
+      humidity = dht.getHumidity();
+      Serial.println("reading...");
+      delay(10);
+    }
 
     counter = now.unixtime() - pressedTime;
         
