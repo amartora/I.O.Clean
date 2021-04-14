@@ -1,65 +1,47 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
-#include <Wire.h>
-#include "DS3231.h"
-#include <EEPROM.h>
+#include <HCSR04.h>
 
-RTClib RTC;
-
-//note: D0 is connected to the RST pin in order for the baord to be able to wake itself up after sleep. The external wakeup button is a push button connecting D0 to ground.
+//note: D0 is connected to the RST pin in order for the board to be able to wake itself up after sleep. The external wakeup button is a switch connecting D0 to ground.
 
 const char* ssid = "";
 const char* password = "";
-const char* server = ""; // change to whatever it will be called
+const char* server = "http://ioclean.xyz/soaptoSQL.php";
 String api = "";
 
-uint32_t pressedTime;
-uint32_t lastAwake;
-int sleepTime = 30;//in seconds
-uint32_t counter;
+#define TRIGPIN 4
+#define ECHOPIN 5
+#define BUZZER 6 //active buzzer
+float maxDist = 5.0; //reading of empty jar in cm
 
-int = placeHolder;
+HCSR04 hc(TRIGPIN, ECHOPIN);
 
-void writeLongIntoEEPROM(int address, long number)//since EEPROm can only have 1 byte (8 bits) stored at each address, custom functions like these are needed
-{ 
-  EEPROM.write(address, (number >> 24) & 0xFF);
-  EEPROM.write(address + 1, (number >> 16) & 0xFF);
-  EEPROM.write(address + 2, (number >> 8) & 0xFF);
-  EEPROM.write(address + 3, number & 0xFF);
-}
-long readLongFromEEPROM(int address)
-{
-  return ((long)EEPROM.read(address) << 24) +
-         ((long)EEPROM.read(address + 1) << 16) +
-         ((long)EEPROM.read(address + 2) << 8) +
-         (long)EEPROM.read(address + 3);
-}
+float dist1 = 0.0;
+float dist2 = 0.0;
+float dist3 = 0.0;
+float avg = 0.0;
+float percentage = 0.0;
 
 void setup() {
   
-  DateTime now = RTC.now();
-  
-  Wire.begin();
   Serial.begin(74880);//74880 seems to work best for this board
-  EEPROM.begin(512);
- 
-  button = 0;
+  pinMode(BUZZER, OUTPUT);
   
-  pressedTime = readLongFromEEPROM(0);
-  lastAwake = readLongFromEEPROM(10);
-  
-  now = RTC.now();
-  Serial.print("Asleep for: ");
-  Serial.println(now.unixtime()-lastAwake);
-  if ((now.unixtime()-lastAwake) < (sleepTime-1)){
-   button = 1;
+  for(int i=0; i<4; i++){
+    digitalWrite(BUZZER, HIGH); //beep
+    delay(50)
+    digitalWrite(BUZZER, LOW)
+    delay(4950)
   }
 
-  if (button == 1){
-    pressedTime = now.unixtime();
-    writeLongIntoEEPROM(0, pressedTime);//writing pressedTime to flash memory so it doesn't get wiped after a reset
-  }
+  digitalWrite(BUZZER, HIGH); //beep beep signifying 20 seconds
+  delay(50)
+  digitalWrite(BUZZER, LOW);
+  delay(30);
+  digitalWrite(BUZZER, HIGH);
+  delay(50)
+  digitalWrite(BUZZER, LOW);
   
   WiFi.begin(ssid, password);
 
@@ -67,8 +49,6 @@ void setup() {
     delay(1000);
     Serial.println("Connecting to Wi-Fi...");
   }
-
-  now = RTC.now();
   
   if (WiFi.status() == WL_CONNECTED){
     
@@ -81,21 +61,27 @@ void setup() {
     
     delay(1000);
 
-    counter = now.unixtime() - pressedTime;
-        
-    Serial.print("Button: ");
-    Serial.println(button);
-    Serial.print("Pressed: ");
-    Serial.println(pressedTime);
-    Serial.print("Now: ");
-    Serial.println(now.unixtime());
-    Serial.print("Time since: ");
-    Serial.println(counter);
-    Serial.print("Last awake: ");
-    Serial.println(lastAwake);
+    dist1 = hc.dist(); //returns distance in cm
+    Serial.print("Reading 1: ");
+    Serial.println(dist1);
     
+    delay(1000);
 
-    String httpRequestData = "api_key=" + api + "&placeHolder=" + placeHolder + "&counter" + counter;
+    dist2 = hc.dist();
+    Serial.print("Reading 2: ");
+    Serial.println(dist2);
+    
+    delay(1000);
+
+    dist3 = hc.dist();
+    Serial.print("Reading 3: ");
+    Serial.println(dist3);
+
+    avg = (dist1 + dist2 + dist3) / 3;
+
+    percentage = avg / maxDist;
+    
+    String httpRequestData = "api_key=" + api + "&percentage=" + percentage;
 
     Serial.print("httpRequestData: ");
     Serial.println(httpRequestData);
@@ -113,9 +99,7 @@ void setup() {
     }
       
     http.end();
-     
-    //delay(10000); I don't believe this is needed, but we will see...
-    
+         
   }
   
   else {
@@ -126,14 +110,9 @@ void setup() {
   }
   
   button = 0;
-  
-  now = RTC.now();
-  lastAwake = now.unixtime();//recording the time the ESP was last awake so on wake-up, can know if it was woken up early (by an outside source)
-  writeLongIntoEEPROM(10, lastAwake);
-  
-  EEPROM.commit(); 
+ 
   Serial.println("SLEEPING...");
-  ESP.deepSleep(sleepTime * 1e6); // 1 minute in microseconds, ake sure D0 is connected to RST
+  ESP.deepSleep();
 
 }
 void loop() {
