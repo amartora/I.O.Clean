@@ -1,7 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
-#include <HCSR04.h>
+#include <HCSR04.h> //https://github.com/gamegine/HCSR04-ultrasonic-sensor-lib
+
 
 //note: D0 is connected to the RST pin in order for the board to be able to wake itself up after sleep. The external wakeup button is a switch connecting D0 to ground.
 
@@ -10,10 +11,10 @@ const char* password = "";
 const char* server = "http://ioclean.xyz/soaptoSQL.php";
 String api = "";
 
-#define TRIGPIN 4
-#define ECHOPIN 5
-#define BUZZER 6 //active buzzer
-float maxDist = 5.0; //reading of empty jar in cm
+#define TRIGPIN 13 // D7
+#define ECHOPIN 12 // D6
+#define BUZZER 14 //active buzzer D5
+float maxDist = 11.86; //reading of empty jar in cm
 
 HCSR04 hc(TRIGPIN, ECHOPIN);
 
@@ -30,17 +31,21 @@ void setup() {
   
   for(int i=0; i<4; i++){
     digitalWrite(BUZZER, HIGH); //beep
-    delay(50)
-    digitalWrite(BUZZER, LOW)
-    delay(4950)
+    delay(50);
+    digitalWrite(BUZZER, LOW);
+    delay(4950);
   }
 
   digitalWrite(BUZZER, HIGH); //beep beep signifying 20 seconds
-  delay(50)
+  delay(50);
   digitalWrite(BUZZER, LOW);
   delay(30);
   digitalWrite(BUZZER, HIGH);
-  delay(50)
+  delay(50);
+  digitalWrite(BUZZER, LOW);
+  delay(30);
+  digitalWrite(BUZZER, HIGH);
+  delay(100);
   digitalWrite(BUZZER, LOW);
   
   WiFi.begin(ssid, password);
@@ -77,9 +82,19 @@ void setup() {
     Serial.print("Reading 3: ");
     Serial.println(dist3);
 
-    avg = (dist1 + dist2 + dist3) / 3;
+    avg = (dist1 + dist2 + dist3) / 3.0;
 
-    percentage = avg / maxDist;
+    percentage = 100.0 * (1.0 - (avg / maxDist));
+
+    Serial.println (avg);
+
+    Serial.println (avg/maxDist);
+    
+    if(percentage < 0){
+      percentage = 0.0;
+    }
+
+    Serial.println(percentage);
     
     String httpRequestData = "api_key=" + api + "&percentage=" + percentage;
 
@@ -108,11 +123,9 @@ void setup() {
     Serial.println("Not connected to Wi-Fi.");
     
   }
-  
-  button = 0;
  
   Serial.println("SLEEPING...");
-  ESP.deepSleep();
+  ESP.deepSleep(0);
 
 }
 void loop() {
