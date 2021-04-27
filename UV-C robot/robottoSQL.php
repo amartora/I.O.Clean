@@ -30,7 +30,8 @@ $api_key= $energy= $duration= "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $api_key = test_input($_POST["api_key"]);
     if($api_key == $api_key_value) {
-        $percentage = test_input($_POST["percentage"]);
+        $energy = test_input($_POST["energy"]);
+        $duration = test_input($_POST["duration"]);
         
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
