@@ -13,7 +13,7 @@ String api = "";
 
 #define TRIGPIN 13 // D7
 #define ECHOPIN 12 // D6
-#define BUZZER 14 //active buzzer D5
+#define BUZZER 15 //active buzzer D8
 float maxDist = 11.86; //reading of empty jar in cm
 
 HCSR04 hc(TRIGPIN, ECHOPIN);
