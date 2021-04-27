@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             die("Connection failed: " . $conn->connect_error);
         } 
         
-        $sql = "INSERT INTO robot (percentage)
+        $sql = "INSERT INTO robot (energy, duration)
           VALUES ('" . $energy . "', '" . $duration . "')";    
       
         if ($conn->query($sql) === TRUE) {
