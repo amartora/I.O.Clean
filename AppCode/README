@@ -1,3 +1,10 @@
+---------------------------------
+Version 1.0
+Expo Ready Version of ioclean
+As of 4/29/21, app fully works.
+
+Don't forget to install node_modules using npm install or yarn add
+See older version info!
 ----------------------------------
 Version 0.8 (Pre-release version)
 
